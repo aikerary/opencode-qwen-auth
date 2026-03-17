@@ -75,15 +75,14 @@ Add the `alibaba-oauth` provider to your `opencode.json` so OpenCode knows which
       "npm": "@ai-sdk/openai-compatible",
       "api": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
       "models": {
-        "qwen3-coder-plus": {
-          "name": "Qwen3 Coder Plus",
+        "coder-model": {
+          "name": "Qwen Coder",
           "family": "qwen",
           "reasoning": true,
           "tool_call": true,
-          "attachment": false,
           "temperature": true,
           "modalities": {
-            "input": ["text", "image"],
+            "input": ["text", "image", "video"],
             "output": ["text"]
           },
           "limit": {
@@ -97,7 +96,7 @@ Add the `alibaba-oauth` provider to your `opencode.json` so OpenCode knows which
 }
 ```
 
-> Use the model ID that the [DashScope API](https://help.aliyun.com/zh/model-studio/getting-started/models) expects (e.g. `qwen-plus`, `qwen-turbo`, `qwen3-coder-plus`).
+> `coder-model` is the model ID exposed by the Qwen OAuth endpoint. Do not change this key — it is the only valid value when authenticating via OAuth (as opposed to a direct API key).
 
 ---
 

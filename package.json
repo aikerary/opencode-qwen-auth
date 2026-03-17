@@ -1,0 +1,39 @@
+{
+  "name": "opencode-qwen-auth",
+  "version": "0.1.0",
+  "description": "OpenCode plugin for Qwen/Alibaba Cloud OAuth authentication",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "bun build ./src/index.ts --outdir ./dist --target node --format esm && bun run build:types",
+    "build:types": "tsc --emitDeclarationOnly",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "bun run build"
+  },
+  "keywords": [
+    "opencode",
+    "qwen",
+    "alibaba",
+    "oauth",
+    "plugin"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@opencode-ai/plugin": "*"
+  },
+  "devDependencies": {
+    "@opencode-ai/plugin": "*",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}

@@ -1,4 +1,8 @@
 import type { Hooks, PluginInput } from "@opencode-ai/plugin"
+import { generatePKCE } from "./crypto/pkce.js"
+import { retryOnRateLimit } from "./rate-limit/retry.js"
+import { sleep } from "./utils/sleep.js"
+import { refreshQwenToken, QwenTokenResponse, CLIENT_ID, TOKEN_URL } from "./oauth/token.js"
 
 interface QwenOAuth {
   type: "oauth"
@@ -10,77 +14,11 @@ interface QwenOAuth {
 
 const OAUTH_DUMMY_KEY = "opencode-oauth-dummy-key"
 
-const CLIENT_ID = "f0304373b74a44d2b584a3fb70ca9e56"
 const SCOPE = "openid profile email model.completion"
 const DEVICE_CODE_URL = "https://chat.qwen.ai/api/v1/oauth2/device/code"
-const TOKEN_URL = "https://chat.qwen.ai/api/v1/oauth2/token"
 const DEVICE_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:device_code"
 const DEFAULT_BASE_URL = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
 const OAUTH_POLLING_SAFETY_MARGIN_MS = 3000
-const MAX_RATE_LIMIT_RETRIES = 5
-const INITIAL_RATE_LIMIT_DELAY_MS = 3000
-const RATE_LIMIT_BACKOFF_MULTIPLIER = 3
-const MAX_RATE_LIMIT_DELAY_MS = 30000
-
-interface PkceCodes {
-  verifier: string
-  challenge: string
-}
-
-async function generatePKCE(): Promise<PkceCodes> {
-  const verifier = generateRandomString(43)
-  const encoder = new TextEncoder()
-  const data = encoder.encode(verifier)
-  const hash = await crypto.subtle.digest("SHA-256", data)
-  const challenge = base64UrlEncode(hash)
-  return { verifier, challenge }
-}
-
-function generateRandomString(length: number): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
-  const bytes = crypto.getRandomValues(new Uint8Array(length))
-  return Array.from(bytes)
-    .map((b) => chars[b % chars.length])
-    .join("")
-}
-
-function base64UrlEncode(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer)
-  const binary = String.fromCharCode(...bytes)
-  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "")
-}
-
-interface QwenTokenResponse {
-  access_token: string
-  refresh_token?: string
-  expires_in?: number
-  resource_url?: string
-}
-
-async function refreshQwenToken(refreshToken: string): Promise<QwenTokenResponse> {
-  const response = await fetch(TOKEN_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      Accept: "application/json",
-    },
-    body: new URLSearchParams({
-      grant_type: "refresh_token",
-      refresh_token: refreshToken,
-      client_id: CLIENT_ID,
-    }).toString(),
-  })
-
-  if (!response.ok) {
-    const errorText = await response.text().catch(() => "")
-    if (response.status === 400) {
-      throw new Error(`Qwen refresh token expired or invalid. Please re-authenticate. ${errorText}`)
-    }
-    throw new Error(`Qwen token refresh failed: ${response.status} ${errorText}`)
-  }
-
-  return response.json() as Promise<QwenTokenResponse>
-}
 
 function normalizeEndpoint(resourceUrl: string | undefined): string {
   if (!resourceUrl) return DEFAULT_BASE_URL
@@ -111,10 +49,6 @@ function stripAuthorizationHeaders(init?: RequestInit): void {
     delete (init.headers as Record<string, string>)["authorization"]
     delete (init.headers as Record<string, string>)["Authorization"]
   }
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 export const QwenAuthPlugin = async (input: PluginInput): Promise<Hooks> => {
@@ -225,30 +159,7 @@ export const QwenAuthPlugin = async (input: PluginInput): Promise<Hooks> => {
             }
 
             if (response.status === 429) {
-              const retryAfterHeader = response.headers.get("retry-after")
-              const retryAfterMsHeader = response.headers.get("retry-after-ms")
-              let waitMs = INITIAL_RATE_LIMIT_DELAY_MS
-
-              if (retryAfterMsHeader) {
-                waitMs = parseInt(retryAfterMsHeader, 10) || waitMs
-              } else if (retryAfterHeader) {
-                waitMs = (parseInt(retryAfterHeader, 10) || 1) * 1000
-              }
-
-              for (let attempt = 1; attempt <= MAX_RATE_LIMIT_RETRIES; attempt++) {
-                await sleep(waitMs)
-
-                try {
-                  response = await fetch(req.rewrittenUrl, { ...init, headers: req.headers })
-                  if (response.status !== 429) {
-                    break
-                  }
-                  waitMs = Math.min(waitMs * RATE_LIMIT_BACKOFF_MULTIPLIER, MAX_RATE_LIMIT_DELAY_MS)
-                } catch (_error) {
-                  if (attempt === MAX_RATE_LIMIT_RETRIES) throw _error
-                  waitMs = Math.min(waitMs * RATE_LIMIT_BACKOFF_MULTIPLIER, MAX_RATE_LIMIT_DELAY_MS)
-                }
-              }
+              response = await retryOnRateLimit(() => fetch(req.rewrittenUrl, { ...init, headers: req.headers }))
             }
 
             return response

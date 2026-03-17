@@ -1,10 +1,20 @@
 {
   "name": "opencode-qwen-auth",
   "version": "0.1.0",
-  "description": "OpenCode plugin for Qwen/Alibaba Cloud OAuth authentication",
+  "description": "OpenCode plugin for Qwen/Alibaba Cloud OAuth authentication (device code + PKCE) — no API key needed",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "author": "aikerary",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aikerary/opencode-qwen-auth.git"
+  },
+  "homepage": "https://github.com/aikerary/opencode-qwen-auth#readme",
+  "bugs": {
+    "url": "https://github.com/aikerary/opencode-qwen-auth/issues"
+  },
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -12,7 +22,9 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "bun build ./src/index.ts --outdir ./dist --target node --format esm && bun run build:types",
@@ -24,10 +36,18 @@
     "opencode",
     "qwen",
     "alibaba",
+    "alibaba-cloud",
+    "dashscope",
     "oauth",
-    "plugin"
+    "oauth2",
+    "pkce",
+    "device-code",
+    "plugin",
+    "ai",
+    "llm",
+    "typescript",
+    "bun"
   ],
-  "license": "MIT",
   "peerDependencies": {
     "@opencode-ai/plugin": "*"
   },

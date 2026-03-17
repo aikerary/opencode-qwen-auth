@@ -1,0 +1,36 @@
+name: Feature Request
+description: Suggest an improvement or new functionality
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before opening a feature request, please search existing issues to avoid duplicates.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      placeholder: "I find myself unable to... / It would be useful to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      placeholder: "Add support for... / Change X so that..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      placeholder: "I tried... but it doesn't work because..."
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Anything else that might help — links, related issues, etc.

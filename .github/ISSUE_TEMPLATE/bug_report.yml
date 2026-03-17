@@ -1,0 +1,78 @@
+name: Bug Report
+description: Something isn't working as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report. Please provide as much detail as possible.
+
+  - type: input
+    id: opencode-version
+    attributes:
+      label: OpenCode version
+      placeholder: "opencode --version"
+    validations:
+      required: true
+
+  - type: input
+    id: bun-version
+    attributes:
+      label: Bun version
+      placeholder: "bun --version"
+    validations:
+      required: true
+
+  - type: input
+    id: plugin-version
+    attributes:
+      label: opencode-qwen-auth version
+      placeholder: "e.g. 0.1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: "e.g. macOS 14, Ubuntu 24.04, Windows 11"
+    validations:
+      required: true
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Relevant opencode.json
+      description: Redact any tokens or credentials before pasting.
+      render: json
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Run `opencode auth login`
+        2. Select "Alibaba (OAuth)"
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error messages / logs
+      render: shell
